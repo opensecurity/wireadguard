@@ -1,0 +1,71 @@
+networks:
+  vpn_dns_net:
+    driver: bridge
+    name: vpn_dns_net
+    ipam:
+      driver: default
+      config:
+        - subnet: 10.13.37.0/24
+
+volumes:
+  adguard_work:
+  wireguard_conf:
+
+services:
+  theoracle:
+    image: mvance/unbound:latest
+    container_name: theoracle
+    hostname: theoracle
+    restart: unless-stopped
+    security_opt: [ "no-new-privileges:true" ]
+    volumes: [ "./unbound/:/opt/unbound/etc/unbound/" ]
+    networks:
+      vpn_dns_net:
+        ipv4_address: 10.13.37.20
+    healthcheck:
+      test: [ "CMD", "unbound-control", "status" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  blackhole:
+    image: adguard/adguardhome:latest
+    container_name: blackhole
+    hostname: blackhole
+    restart: unless-stopped
+    security_opt: [ "no-new-privileges:true" ]
+    ports:
+      - "127.0.0.1:3000:3000"
+    volumes:
+      - "adguard_work:/opt/adguardhome/work"
+      - "./adguard/conf:/opt/adguardhome/conf"
+    networks:
+      vpn_dns_net:
+        ipv4_address: 10.13.37.10
+    depends_on:
+      theoracle:
+        condition: service_healthy
+
+  stargate:
+    image: linuxserver/wireguard:latest
+    container_name: stargate
+    hostname: stargate
+    restart: unless-stopped
+    cap_add: [ "NET_ADMIN", "SYS_MODULE" ]
+    sysctls:
+      - net.ipv4.conf.all.src_valid_mark=1
+    ports: [ "${C_WIREGUARD_PORT}:51820/udp" ]
+    volumes:
+      - "./wireguard/conf:/config"
+      - "/lib/modules:/lib/modules:ro"
+    environment:
+      - PUID=${C_PUID}
+      - PGID=${C_PGID}
+      - TZ=${C_TZ}
+      - PEERS=${C_WIREGUARD_PEERS}
+      - PEERDNS=10.13.37.10
+      - INTERNAL_SUBNET=10.42.42.0/24
+      - ALLOWEDIPS=0.0.0.0/0
+    networks: [ "vpn_dns_net" ]
+    depends_on: [ "blackhole" ]
+

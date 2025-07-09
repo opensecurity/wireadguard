@@ -1,0 +1,36 @@
+# --- User-specific Configuration ---
+# Ignore the local environment file. It contains user-specific settings.
+# Only the .env-example should be committed to the repository.
+.env
+
+# --- Generated Secrets and Runtime Data ---
+# The WireGuard container generates all configurations, including private keys,
+# in this directory. It MUST be ignored to protect your secrets.
+/wireguard/conf/
+
+# The AdGuard Home and WireGuard volumes contain runtime databases and state.
+# This is a safeguard in case named volumes are mapped to local directories.
+/adguard_work/
+/wireguard_conf/
+
+# --- Downloaded Dependencies ---
+# The root.hints file is downloaded by the Makefile. It does not need to be
+# stored in the repository.
+/unbound/root.hints
+
+# --- Common IDE & OS Files ---
+# JetBrains IDEs
+.idea/
+
+# Visual Studio Code
+.vscode/
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+
+# --- Logs & Temporary Files ---
+*.log
+*.tmp
