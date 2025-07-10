@@ -21,6 +21,11 @@ services:
     networks:
       vpn_dns_net:
         ipv4_address: 10.13.37.20
+    healthcheck:
+      test: [ "CMD", "unbound-control", "status" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   blackhole:
     image: adguard/adguardhome:latest
