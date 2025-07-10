@@ -9,7 +9,6 @@ networks:
 
 volumes:
   adguard_work:
-  wireguard_conf:
 
 services:
   theoracle:
